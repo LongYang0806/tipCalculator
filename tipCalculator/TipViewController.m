@@ -7,6 +7,7 @@
 //
 
 #import "TipViewController.h"
+#import "SettingsViewController.h"
 
 @interface TipViewController ()
 
@@ -16,8 +17,8 @@
 @property (weak, nonatomic) IBOutlet UISegmentedControl *tipControl;
 
 - (IBAction)OnTap:(id)sender;
-
 - (void)updateValues;
+- (void)onSettingsButton;
 
 @end
 
@@ -33,23 +34,18 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Setting" style:UIBarButtonItemStylePlain target:self action:@selector(onSettingsButton)];
+    [self updateValues];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    NSLog(@"TipViewController view will appear");
     [self updateValues];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
 - (IBAction)OnTap:(id)sender {
     [self.view endEditing:YES];
@@ -59,12 +55,26 @@
 - (void)updateValues {
     float billAmount = [self.billTextField.text floatValue];
     
-    NSArray *tipValues = @[@(0.1), @(0.15), @(0.2)];
-    float tipAmount = [tipValues[self.tipControl.selectedSegmentIndex] floatValue] * billAmount;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    NSArray *tipValues = @[
+                           [NSString stringWithFormat:@"%@%%", [defaults objectForKey:@"entry"]],
+                           [NSString stringWithFormat:@"%@%%", [defaults objectForKey:@"interm"]],
+                           [NSString stringWithFormat:@"%@%%", [defaults objectForKey:@"premium"]],
+                           ];
+    for (int i = 0; i < 3; i++) {
+        [self.tipControl setTitle:tipValues[i] forSegmentAtIndex:i];
+    }
+    
+    float tipAmount = [tipValues[self.tipControl.selectedSegmentIndex] floatValue] * billAmount / 100.0;
     float totalAmount = tipAmount + billAmount;
     
     self.tipLabel.text = [NSString stringWithFormat:@"$%0.2f", tipAmount];
     self.totalLabel.text = [NSString stringWithFormat:@"$%0.2f", totalAmount];
+}
+
+- (void)onSettingsButton {
+    [self.navigationController pushViewController:[[SettingsViewController alloc] init] animated:YES];
 }
 
 @end
